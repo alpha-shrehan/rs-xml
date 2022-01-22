@@ -1,0 +1,5 @@
+add_executable(test_exe test.c)
+include_directories(../include)
+include_directories(../)
+target_link_libraries(test_exe rsxml)
+add_test(test test_exe)
