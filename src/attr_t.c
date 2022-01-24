@@ -30,12 +30,24 @@ XML_attr_get(xml_t *xml, char *name)
 
     do
     {
-        if (
-            !strcmp(xml->attr_list[i].name, name))
-            return &(xml->attr_list[i]);
-        else if (
-            !strcmp(xml->attr_list[j].name, name))
-            return &(xml->attr_list[j]);
+        if (name == NULL)
+        {
+            if (
+                xml->attr_list[i].name == NULL)
+                return &(xml->attr_list[i]);
+            else if (
+                xml->attr_list[j].name == NULL)
+                return &(xml->attr_list[j]);
+        }
+        else
+        {
+            if (
+                !strcmp(xml->attr_list[i].name, name))
+                return &(xml->attr_list[i]);
+            else if (
+                !strcmp(xml->attr_list[j].name, name))
+                return &(xml->attr_list[j]);
+        }
 
         i++;
         j--;
