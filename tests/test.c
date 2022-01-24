@@ -27,9 +27,8 @@ char *read_file(char *filename)
 int main(int argc, const char *argv[])
 {
     xml_t *xml = XML_xml_new_ptr((char *)"root", NULL, 0, NULL, 0);
-    XML_lexer_fromString(xml, read_file("../../tests/main.xml"));
+    XML_lexer_fromString(xml, read_file("C:\\Users\\USER\\Desktop\\HProjects\\RsXML\\tests\\main.xml"));
 
-    printf("<here>\n");
-    XML_print_markup(xml);
+    XML_print_markup_f(xml);
     return 0;
 }

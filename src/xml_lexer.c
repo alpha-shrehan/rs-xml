@@ -9,103 +9,103 @@ XML_lexer_fromString(xml_t *xml, char *str)
 RSXML_API int
 __xml_atomic_lexer_from_string(xml_t *xml, char *str)
 {
-    assert(str != NULL);
-    char *_str_beg = str;
-
-    do
+    for (size_t i = 0; i < strlen(str); i++)
     {
-        char c = *str;
+        char c = str[i];
 
         if (c == '<')
         {
-            char *tag_name = malloc(sizeof(char));
-            int ti = 0;
-            str++;
+            char *rt = malloc(sizeof(char));
+            int ri = 0, sfg = 0;
 
-            while (*str != '>')
+            for (size_t j = i + 1; j < strlen(str); j++)
             {
-                tag_name = realloc(tag_name, (ti + 1) * sizeof(char));
-                tag_name[ti++] = *str;
-                str++;
-            }
-            str++; // Eat '>'
-
-            tag_name = realloc(tag_name, (ti + 1) * sizeof(char));
-            tag_name[ti++] = '\0';
-
-            char *tag_name_f = strdup(tag_name);
-            free(tag_name);
-            tag_name = NULL;
-            char *tn = __xml_get_name_from_tag_line(strdup(tag_name_f));
-
-            if (*tn != '/')
-            {
-                xml_t tagc = XML_xml_new(tn, NULL, 0, NULL, 0);
-                if (strstr(tag_name_f, (char *)(char []){' ', '\0'}) != NULL)
-                    __xml_make_attrs_from_line(&tagc, strdup(tag_name_f));
-
-                char *xml_body_data = __xml_get_tag_body_from_line(tn, strdup(str));
-                XML_lexer_fromString(&tagc, xml_body_data);
-                XML_xml_add_child(xml, tagc);
-
-                char *xbd = xml_body_data;
-                while (*xbd != '\0')
+                if (str[j] == '>' && !sfg)
                 {
-                    str++;
-                    xbd++;
+                    i = j;
+                    break;
                 }
 
-                for (size_t _i = 0; _i < strlen(tn) + 2; _i++)
-                    str++;
+                if (str[j] == '\'' ||
+                    str[j] == '\"')
+                    sfg = !sfg;
 
-                free(xml_body_data);
+                if (ri)
+                    rt = realloc(rt, (ri + 1) * sizeof(char));
+
+                rt[ri++] = str[j];
             }
-            else
-                str += strlen(tn);
+
+            if (ri)
+                rt = realloc(rt, (ri + 1) * sizeof(char));
+
+            rt[ri++] = '\0';
+
+            char *tag_name = strdup(__xml_get_name_from_tag_line(strdup(rt)));
+
+            xml_t xt = XML_xml_new(strdup(tag_name), NULL, 0, NULL, 0);
+            __xml_make_attrs_from_line(&xt, strdup(rt));
+
+            char *tag_body = strdup(__xml_get_tag_body_from_line(tag_name, str + i + 1));
+
+            XML_lexer_fromString(&xt, strdup(tag_body));
+            XML_xml_add_child(xml, xt);
+
+            i += strlen(tag_body) + strlen(tag_name) + 3;
+
+            free(tag_body);
+            free(tag_name);
+            free(rt);
         }
         else
         {
-            char *tvd = malloc(sizeof(char));
-            int tvc = 0;
+            char *r = malloc(sizeof(char));
+            char ri = 0;
+            int ej = -1;
 
-            while (*str != '\0')
+            for (size_t j = i; j < strlen(str); j++)
             {
-                if (*str == '<')
-                    break;
-                
-                if ((*str == ' ' || *str == '\t' || *str == '\n') &&
-                    !tvc)
+                if (str[j] == '<')
                 {
-                    str++;
-                    continue;
+                    ej = j - 1;
+                    break;
                 }
 
-                if (tvc)
-                    tvd = realloc(tvd, (tvc + 1) * sizeof(char));
+                if ((
+                        str[j] == ' ' ||
+                        str[j] == '\t' ||
+                        str[j] == '\n') &&
+                    !ri)
+                    continue;
 
-                tvd[tvc++] = *str;
-                str++;
+                if (ri)
+                    r = realloc(r, (ri + 1) * sizeof(char));
+
+                r[ri++] = str[j];
             }
-            str--;
 
-            if (tvc)
-                tvd = realloc(tvd, (tvc + 1) * sizeof(char));
+            if (ri)
+                r = realloc(r, (ri + 1) * sizeof(char));
 
-            tvd[tvc++] = '\0';
+            r[ri++] = '\0';
 
-            if (strlen(tvd))
+            if (strlen(r))
             {
-                xml_t av = XML_xml_new(NULL, NULL, 0, NULL, 0);
-                attr_t av_ = XML_attr_new(NULL, tvd);
+                xml_t tagc = XML_xml_new("val", NULL, 0, NULL, 0);
+                attr_t att = XML_attr_new("val", strdup(r));
 
-                XML_attr_add(&av, av_);
-                XML_xml_add_child(xml, av);
+                XML_attr_add(&tagc, att);
+                XML_xml_add_child(xml, tagc);
             }
-        }
 
-        if (*str)
-            str++;
-    } while (*str != '\0');
+            free(r);
+            
+            if (ej != -1)
+                i = ej;
+            else
+                break; // EOF
+        }
+    }
 
     return 0;
 }
@@ -131,9 +131,17 @@ RSXML_API char *__xml_get_name_from_tag_line(char *s)
 RSXML_API void
 __xml_make_attrs_from_line(xml_t *xml, char *line)
 {
-    while (*line != ' ' || *line != '\0')
+    if (strstr(line, (char *)(char[]){' ', '\0'}) == NULL)
+        return;
+
+    while (*line != '\0')
+    {
         line++;
-    
+
+        if (*line == ' ')
+            break;
+    }
+
     if (*line == '\0')
         return;
     line++; // Eat ' '
@@ -218,7 +226,7 @@ RSXML_API char *
 __xml_get_tag_body_from_line(char *key, char *data)
 {
     char *end_tag = malloc((4 + strlen(key)) * sizeof(char));
-    sprintf(end_tag, "/%s", key);
+    sprintf(end_tag, "/%s", strdup(key));
 
     char *res = malloc(sizeof(char));
     int rc = 0, tagcl = 0;
