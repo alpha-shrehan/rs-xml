@@ -9,7 +9,7 @@ struct xml_attr
 };
 
 /**
- * @brief All text which does not belong to tags is stored in tags named NULL (which has an attribute NULL),
+ * @brief All text which does not belong to tags is stored in tags named val (which has an attribute val),
  * till a tag is reached.
  */
 struct xml_node

@@ -9,7 +9,7 @@ XML_lexer_fromString(xml_t *xml, char *str)
 RSXML_API int
 __xml_atomic_lexer_from_string(xml_t *xml, char *str)
 {
-    for (size_t i = 0; i < strlen(str); i++)
+    for (int i = 0; i < strlen(str); i++)
     {
         char c = str[i];
 
@@ -41,7 +41,7 @@ __xml_atomic_lexer_from_string(xml_t *xml, char *str)
 
             rt[ri++] = '\0';
 
-            char *tag_name = strdup(__xml_get_name_from_tag_line(strdup(rt)));
+            char *tag_name = strdup(__xml_get_name_from_tag_line(rt));
 
             xml_t xt = XML_xml_new(strdup(tag_name), NULL, 0, NULL, 0);
             __xml_make_attrs_from_line(&xt, strdup(rt));
@@ -60,7 +60,8 @@ __xml_atomic_lexer_from_string(xml_t *xml, char *str)
         else
         {
             char *r = malloc(sizeof(char));
-            char ri = 0;
+            *r = '\0';
+            int ri = 0;
             int ej = -1;
 
             for (size_t j = i; j < strlen(str); j++)
@@ -99,7 +100,7 @@ __xml_atomic_lexer_from_string(xml_t *xml, char *str)
             }
 
             free(r);
-            
+
             if (ej != -1)
                 i = ej;
             else
@@ -113,17 +114,20 @@ __xml_atomic_lexer_from_string(xml_t *xml, char *str)
 RSXML_API char *__xml_get_name_from_tag_line(char *s)
 {
     char *res = malloc(sizeof(char));
-    int v = 1;
+    int v = 0;
 
-    while (*s != ' ')
+    for (size_t i = 0; i < strlen(s); i++)
     {
-        res = realloc(res, (++v) * sizeof(char));
-        res[v - 2] = *s;
-        s++;
+        if (s[i] == ' ' || s[i] == '>')
+            break;
+        if (v)
+            res = realloc(res, (v + 1) * sizeof(char));
+        res[v++] = s[i];
     }
 
-    res = realloc(res, (++v) * sizeof(char));
-    res[v - 2] = '\0';
+    if (v)
+        res = realloc(res, (v + 1) * sizeof(char));
+    res[v++] = '\0';
 
     return res;
 }
@@ -255,6 +259,7 @@ __xml_get_tag_body_from_line(char *key, char *data)
                 tn = realloc(tn, (tnn + 1) * sizeof(char));
 
             tn[tnn++] = '\0';
+            // printf("%s %s %d\n", end_tag, tn, !tagcl);
 
             if (!strcmp(end_tag, tn))
             {

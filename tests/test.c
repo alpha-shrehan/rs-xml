@@ -1,3 +1,4 @@
+// #define XML_HACK
 #include <rsxml.h>
 
 char *read_file(char *filename)
@@ -26,9 +27,15 @@ char *read_file(char *filename)
 
 int main(int argc, const char *argv[])
 {
-    xml_t *xml = XML_xml_new_ptr((char *)"root", NULL, 0, NULL, 0);
+#ifdef XML_HACK
+    xml_t *xml = XML_xml_new_ptr(NULL, NULL, 0, NULL, 0);
     XML_lexer_fromString(xml, read_file("C:\\Users\\USER\\Desktop\\HProjects\\RsXML\\tests\\main.xml"));
 
+    XML_print_markup_f(*xml);
+#else
+    xml_t xml = XML_new_fromString(read_file("C:\\Users\\USER\\Desktop\\HProjects\\RsXML\\tests\\main.xml"));
+
     XML_print_markup_f(xml);
+#endif
     return 0;
 }

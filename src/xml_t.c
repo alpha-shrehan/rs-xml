@@ -17,29 +17,29 @@ XML_xml_add_child(xml_t *xml, xml_t child)
 }
 
 RSXML_API void
-XML_print_markup(xml_t *xml)
+XML_print_markup(xml_t xml)
 {
-    char *res = malloc((strlen(xml->name != NULL ? xml->name : "null") + 2) * sizeof(char));
+    char *res = malloc((strlen(xml.name != NULL ? xml.name : "null") + 2) * sizeof(char));
 
-    if (xml->name != NULL)
-        sprintf(res, "<%s", xml->name);
+    if (xml.name != NULL)
+        sprintf(res, "<%s", xml.name);
     else
         sprintf(res, "<null");
 
-    for (size_t i = 0; i < xml->attr_count; i++)
+    for (size_t i = 0; i < xml.attr_count; i++)
     {
         res = realloc(
             res,
             (
                 strlen(res) +
                 strlen(
-                    xml->attr_list[i].name != NULL ? xml->attr_list[i].name : "null") +
+                    xml.attr_list[i].name != NULL ? xml.attr_list[i].name : "null") +
                 3 +
                 strlen(
-                    xml->attr_list[i].value != NULL ? xml->attr_list[i].value : "null")) *
+                    xml.attr_list[i].value != NULL ? xml.attr_list[i].value : "null")) *
                 sizeof(char)); // Big brain time
 
-        sprintf(res, "%s %s=%s", res, xml->attr_list[i].name, xml->attr_list[i].value);
+        sprintf(res, "%s %s=%s", res, xml.attr_list[i].name, xml.attr_list[i].value);
     }
 
     res = realloc(res, (strlen(res) + 2) * sizeof(char));
@@ -47,8 +47,8 @@ XML_print_markup(xml_t *xml)
 
     printf("%s", res);
 
-    for (size_t i = 0; i < xml->children_count; i++)
-        XML_print_markup(&(xml->children[i]));
+    for (size_t i = 0; i < xml.children_count; i++)
+        XML_print_markup(xml.children[i]);
 
     char *rc = res;
     res++;
@@ -61,40 +61,40 @@ XML_print_markup(xml_t *xml)
     free(rc);
 }
 
-RSXML_API void XML_print_markup_f(xml_t *xml)
+RSXML_API void XML_print_markup_f(xml_t xml)
 {
     __xml_print_markup_f(xml, "");
 }
 
-RSXML_API void __xml_print_markup_f(xml_t *xml, char *pref)
+RSXML_API void __xml_print_markup_f(xml_t xml, char *pref)
 {
-    char *res = malloc((strlen(xml->name != NULL ? xml->name : "null") + 2) * sizeof(char));
+    char *res = malloc((strlen(xml.name != NULL ? xml.name : "") + 2) * sizeof(char));
 
-    if (!strcmp(xml->name, "val"))
+    if (xml.name != NULL && !strcmp(xml.name, "val"))
     {
-        printf("%s%s\n", pref, XML_attr_get(xml, "val")->value);
+        printf("%s%s\n", pref, XML_attr_get(&xml, "val")->value);
         return;
     }
 
-    if (xml->name != NULL)
-        sprintf(res, "<%s", xml->name);
+    if (xml.name != NULL)
+        sprintf(res, "<%s", xml.name);
     else
-        sprintf(res, "<null");
+        sprintf(res, "<");
 
-    for (size_t i = 0; i < xml->attr_count; i++)
+    for (size_t i = 0; i < xml.attr_count; i++)
     {   
         res = realloc(
             res,
             (
                 strlen(res) +
                 strlen(
-                    xml->attr_list[i].name != NULL ? xml->attr_list[i].name : "null") +
+                    xml.attr_list[i].name != NULL ? xml.attr_list[i].name : "null") +
                 3 +
                 strlen(
-                    xml->attr_list[i].value != NULL ? xml->attr_list[i].value : "null")) *
+                    xml.attr_list[i].value != NULL ? xml.attr_list[i].value : "null")) *
                 sizeof(char)); // Big brain time
 
-        sprintf(res, "%s %s=%s", res, xml->attr_list[i].name, xml->attr_list[i].value);
+        sprintf(res, "%s %s=%s", res, xml.attr_list[i].name, xml.attr_list[i].value);
     }
 
     res = realloc(res, (strlen(res) + 2) * sizeof(char));
@@ -106,8 +106,8 @@ RSXML_API void __xml_print_markup_f(xml_t *xml, char *pref)
     char *pref_ = malloc((strlen(pref) + 6) * sizeof(char));
     sprintf(pref_, "%s    ", pref);
 
-    for (size_t i = 0; i < xml->children_count; i++)
-        __xml_print_markup_f(&(xml->children[i]), pref_);
+    for (size_t i = 0; i < xml.children_count; i++)
+        __xml_print_markup_f(xml.children[i], pref_);
 
     char *rc = res;
     res++;
